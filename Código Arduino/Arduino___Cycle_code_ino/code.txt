@@ -1,0 +1,107 @@
+// iRed Thermal Cycler - Betha Version //
+// Diego N. Vilela - 2013 //
+
+// Libraries //
+
+#include <math.h>
+
+// Variables //
+
+// Pins //
+
+int pin_sensor = A0;
+int pin_ired = 2;
+int pin_cooler = 3;
+
+// Temperature points //
+
+int temp_dissociating = 96;
+int temp_annealing = 56;
+int temp_extension = 72;
+
+// Time delays // 
+
+int time_delay = 2000;
+int time_elong = 5000;
+
+// Counters //
+
+int count_cycle = 1;
+
+// Thermistor NTC function (Steinhart-Hart) //
+
+float termistor (float RawADC)
+{
+  float temp;
+  temp = log(((10240000/RawADC) - 10000));
+  temp = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * temp * temp ))* temp ); 
+  temp = temp - 273.15;
+  return temp; 
+}
+
+// Main setup //
+
+void setup(){ 
+  pinMode(pin_sensor, INPUT);
+  pinMode(pin_ired, OUTPUT);
+  pinMode(pin_cooler, OUTPUT);
+  analogReference(EXTERNAL);
+  Serial.begin(9600);
+}
+
+// Loop setup //
+
+void loop(){
+  
+float temp = termistor(analogRead(pin_sensor));
+
+// Dissociating stage //
+
+do { 
+  digitalWrite(pin_ired, HIGH); 
+  temp = analogRead(pin_sensor);
+  Serial.print("Ciclo #");
+  Serial.print(count_cycle);
+  Serial.print(", Aquecendo a lampada, Temp = ");
+  Serial.println(temp);
+  
+} while (temp < temp_dissociating);
+
+digitalWrite(pin_ired, LOW);
+Serial.println("Desassociação do DNA");
+delay(time_delay);
+
+// Annealing stage //
+
+do {
+   digitalWrite(pin_cooler, HIGH);
+   temp = analogRead(pin_sensor);
+   Serial.print("Ciclo #");
+   Serial.print(count_cycle);
+   Serial.print(", Refrigerando para pareamento, Temp = ");
+   Serial.println(temp);
+} while (temp > temp_annealing);
+
+digitalWrite(pin_cooler, LOW);
+Serial.println("Pareamento de Primers");
+delay(time_delay);
+
+// Extension stage //
+
+do{
+  digitalWrite(pin_ired, HIGH);
+  temp = analogRead(pin_sensor);
+  Serial.print("Cycle #");
+  Serial.print(count_cycle);  
+  Serial.print(", Aquecendo para temperatura de alongamento, Temp = ");
+  Serial.println(temp);
+} while (temp < temp_extension);
+
+digitalWrite(pin_ired, LOW);
+  Serial.print("Cycle #");
+  Serial.print(count_cycle);
+Serial.println(", Alongando DNA");
+delay(time_elong);
+
+count_cycle++;
+}

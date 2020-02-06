@@ -1,0 +1,96 @@
+// iRed Thermal Cycler - Betha Version //
+// Diego N. Vilela - 2013 //
+
+// Libraries //
+
+#include <Thermistor.h>
+Thermistor temp(0);
+
+// Variables //
+
+// Pins //
+
+int pin_sensor = A0;
+int pin_ired = 2;
+int pin_cooler = 3;
+
+// Temperature points //
+
+int temp_dissociating = 96;
+int temp_annealing = 56;
+int temp_extension = 72;
+
+// Time delays // 
+
+int time_delay = 2000;
+int time_elong = 5000;
+
+// Counters //
+
+int count_cycle = 1;
+
+// Main setup //
+
+void setup(){ 
+  pinMode(pin_sensor, INPUT);
+  pinMode(pin_ired, OUTPUT);
+  pinMode(pin_cooler, OUTPUT);
+  Serial.begin(9600);
+}
+
+// Loop setup //
+
+void loop(){
+  
+float atual_temp = temp.getTemp();
+
+// Dissociating stage //
+
+do { 
+  digitalWrite(pin_ired, HIGH); 
+  atual_temp = temp.getTemp();
+  Serial.print("Ciclo #");
+  Serial.print(count_cycle);
+  Serial.print(", Aquecendo a lampada, Temp = ");
+  Serial.println(atual_temp);
+  
+} while (atual_temp < temp_dissociating);
+
+digitalWrite(pin_ired, LOW);
+Serial.println("Desassociacao do DNA");
+delay(time_delay);
+
+// Annealing stage //
+
+do {
+   digitalWrite(pin_cooler, HIGH);
+   atual_temp = temp.getTemp();
+   Serial.print("Ciclo #");
+   Serial.print(count_cycle);
+   Serial.print(", Refrigerando para pareamento, Temp = ");
+   Serial.println(atual_temp);
+} while (atual_temp > temp_annealing);
+
+digitalWrite(pin_cooler, LOW);
+Serial.println("Pareamento de Primers");
+delay(time_delay);
+
+// Extension stage //
+
+do{
+  digitalWrite(pin_ired, HIGH);
+  atual_temp = temp.getTemp();
+  Serial.print("Cycle #");
+  Serial.print(count_cycle);  
+  Serial.print(", Aquecendo para temperatura de alongamento, Temp = ");
+  Serial.println(atual_temp);
+} while (atual_temp < temp_extension);
+
+digitalWrite(pin_ired, LOW);
+  Serial.print("Cycle #");
+  Serial.print(count_cycle);
+Serial.println(", Alongando DNA");
+delay(time_elong);
+
+count_cycle++;
+}
